@@ -17,9 +17,12 @@ run-test-s:
 
 run-test-a: \
 	run-test-a1 \
+	run-test-a2 \
 
 run-test-a1:
-	shortenertestbeta -test.v -test.run=^TestIteration1$ -binary-path=cmd/shortener/shortener
+	shortenertestbeta -test.v -test.run=^TestIteration1$$ -binary-path=cmd/shortener/shortener
+run-test-a2:
+	shortenertestbeta -test.v -test.run=^TestIteration2$$ -source-path=.
 
 update-tpl:
 	# git remote add -m main template https://github.com/Yandex-Practicum/go-musthave-shortener-tpl.git
