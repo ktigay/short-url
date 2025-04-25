@@ -78,6 +78,7 @@ func (s *ShortURL) GetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if link == "" {
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	http.Redirect(w, r, link, http.StatusTemporaryRedirect)
