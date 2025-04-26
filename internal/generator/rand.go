@@ -1,11 +1,8 @@
 package generator
 
 import (
-	"math/rand"
-	"strings"
+	"github.com/ktigay/short-url/internal/random"
 )
-
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 type RandStringGenerator struct {
 }
@@ -15,13 +12,6 @@ func NewRandStringGenerator() *RandStringGenerator {
 }
 
 // Generate - рандомная строка длины n
-func (s *RandStringGenerator) Generate(min int, max int) string {
-	n := rand.Intn(max-min) + min
-	l := len(charset)
-	sb := strings.Builder{}
-	sb.Grow(n)
-	for i := 0; i < n; i++ {
-		sb.WriteByte(charset[rand.Intn(l)])
-	}
-	return sb.String()
+func (s *RandStringGenerator) Generate(min, max int) string {
+	return random.RandString(min, max)
 }

@@ -7,7 +7,8 @@ run-test: \
 	build \
 	run-test-a \
 	run-test-u \
-	run-test-s
+	run-test-s \
+	run-lint
 
 run-test-u:
 	go test ./...
@@ -36,3 +37,6 @@ run-test-a5:
 update-tpl:
 	# git remote add -m main template https://github.com/Yandex-Practicum/go-musthave-shortener-tpl.git
 	git fetch template && git checkout template/main .github
+
+run-lint:
+	golangci-lint run
