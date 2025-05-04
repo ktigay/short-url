@@ -21,9 +21,6 @@ func Initialize() *zerolog.Logger {
 	output.FormatFieldName = func(i interface{}) string {
 		return fmt.Sprintf("%s:", i)
 	}
-	output.FormatFieldValue = func(i interface{}) string {
-		return strings.ToUpper(fmt.Sprintf("%s", i))
-	}
 
 	ZeroLogger = zerolog.New(output).With().Timestamp().Logger()
 

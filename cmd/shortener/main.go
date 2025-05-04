@@ -38,6 +38,7 @@ func registerMiddlewares(l *zerolog.Logger, router *mux.Router) {
 		func(next http.Handler) http.Handler {
 			return middleware.WithLogging(l, next)
 		},
+		middleware.CompressHandler,
 	)
 }
 
