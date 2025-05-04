@@ -21,7 +21,8 @@ run-test-a: \
 	run-test-a2 \
 	run-test-a3 \
 	run-test-a4 \
-	run-test-a5
+	run-test-a5 \
+	run-test-a6 \
 
 run-test-a1:
 	shortenertestbeta -test.v -test.run=^TestIteration1$$ -binary-path=cmd/shortener/shortener
@@ -33,6 +34,8 @@ run-test-a4:
 	shortenertestbeta -test.v -test.run=^TestIteration4$$ -binary-path=cmd/shortener/shortener -server-port=$(SERVER_PORT)
 run-test-a5:
 	shortenertestbeta -test.v -test.run=^TestIteration5$$ -binary-path=cmd/shortener/shortener -server-port=$(SERVER_PORT)
+run-test-a6:
+	shortenertestbeta -test.v -test.run=^TestIteration6$$ -source-path=.
 
 update-tpl:
 	# git remote add -m main template https://github.com/Yandex-Practicum/go-musthave-shortener-tpl.git
