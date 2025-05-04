@@ -2,35 +2,48 @@ package main
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/ktigay/short-url/internal/generator"
-	"github.com/ktigay/short-url/internal/shorturl"
-	"github.com/ktigay/short-url/internal/storage"
-	"log"
+	"github.com/ktigay/short-url/internal/config"
+	"github.com/rs/zerolog"
 	"net/http"
 	"os"
+
+	"github.com/ktigay/short-url/internal/generator"
+	"github.com/ktigay/short-url/internal/logger"
+	"github.com/ktigay/short-url/internal/middleware"
+	"github.com/ktigay/short-url/internal/shorturl"
+	"github.com/ktigay/short-url/internal/storage"
 )
 
 func main() {
+	var l = logger.Initialize()
+
 	router := mux.NewRouter()
 
-	config, err := parseFlags(os.Args[1:])
+	cfg, err := parseFlags(os.Args[1:])
 	if err != nil {
-		log.Fatal(err)
+		l.Fatal().Err(err).Msg("failed to parse flags")
 	}
 
-	router.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("content-type", "text/plain; charset=utf-8")
-			next.ServeHTTP(w, r)
-		})
-	})
+	registerMiddlewares(l, router)
+	registerHandlers(cfg, router)
 
+	if err := http.ListenAndServe(cfg.ServerHost, router); err != nil {
+		l.Fatal().Err(err).Msg("failed to start server")
+	}
+}
+
+func registerMiddlewares(l *zerolog.Logger, router *mux.Router) {
+	router.Use(
+		middleware.WithContentType,
+		func(next http.Handler) http.Handler {
+			return middleware.WithLogging(l, next)
+		},
+	)
+}
+
+func registerHandlers(config *config.Config, router *mux.Router) {
 	u := shorturl.NewShortURL(config, storage.NewMemStorage(), generator.NewRandStringGenerator())
 
 	router.HandleFunc("/", u.PutHandler).Methods(http.MethodPost)
 	router.HandleFunc("/{path:.*}", u.GetHandler).Methods(http.MethodGet)
-
-	if err := http.ListenAndServe(config.ServerHost, router); err != nil {
-		log.Fatal(err)
-	}
 }
