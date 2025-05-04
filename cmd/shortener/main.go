@@ -25,7 +25,7 @@ func main() {
 	}
 
 	registerMiddlewares(l, router)
-	registerHandlers(cfg, router)
+	registerHandlers(cfg, l, router)
 
 	if err := http.ListenAndServe(cfg.ServerHost, router); err != nil {
 		l.Fatal().Err(err).Msg("failed to start server")
@@ -41,9 +41,10 @@ func registerMiddlewares(l *zerolog.Logger, router *mux.Router) {
 	)
 }
 
-func registerHandlers(config *config.Config, router *mux.Router) {
-	u := shorturl.NewShortURL(config, storage.NewMemStorage(), generator.NewRandStringGenerator())
+func registerHandlers(config *config.Config, l *zerolog.Logger, router *mux.Router) {
+	u := shorturl.NewShortURL(config, storage.NewMemStorage(), generator.NewRandStringGenerator(), l)
 
 	router.HandleFunc("/", u.PutHandler).Methods(http.MethodPost)
 	router.HandleFunc("/{path:.*}", u.GetHandler).Methods(http.MethodGet)
+	router.HandleFunc("/api/shorten", u.PutJSONHandler).Methods(http.MethodPost)
 }

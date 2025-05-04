@@ -1,8 +1,10 @@
 package shorturl
 
 import (
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/ktigay/short-url/internal/config"
+	"github.com/rs/zerolog"
 	"io"
 	"net/http"
 )
@@ -28,14 +30,16 @@ type ShortURL struct {
 	config    *config.Config
 	storage   StorageInterface
 	generator StringGeneratorInterface
+	logger    *zerolog.Logger
 }
 
 // NewShortURL - конструктор.
-func NewShortURL(config *config.Config, storage StorageInterface, gen StringGeneratorInterface) *ShortURL {
+func NewShortURL(config *config.Config, storage StorageInterface, gen StringGeneratorInterface, l *zerolog.Logger) *ShortURL {
 	return &ShortURL{
 		config:    config,
 		storage:   storage,
 		generator: gen,
+		logger:    l,
 	}
 }
 
@@ -82,4 +86,34 @@ func (s *ShortURL) GetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, link, http.StatusTemporaryRedirect)
+}
+
+func (s *ShortURL) PutJSONHandler(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var reqJSON = new(struct {
+		URL string `json:"url"`
+	})
+
+	if err = json.Unmarshal(body, &reqJSON); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	shortLink := s.generator.Generate(minShortLinkLength, maxShortLinkLength)
+	s.storage.PutLink(shortLink, reqJSON.URL)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(struct {
+		Result string `json:"result"`
+	}{
+		Result: s.config.ServerURL + "/" + shortLink,
+	}); err != nil {
+		s.logger.Error().Err(err).Msg("Failed to write response")
+	}
 }
