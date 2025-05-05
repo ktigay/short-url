@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/ktigay/short-url/internal/config"
+	"github.com/ktigay/short-url/internal/storage"
 	"github.com/rs/zerolog"
 	"io"
 	"net/http"
@@ -16,9 +17,10 @@ const (
 
 // StorageInterface - интерфейс хранилища.
 type StorageInterface interface {
-	Link(key string) (string, error)
+	Link(key string) (*storage.Entity, error)
 	Unlink(key string) error
-	PutLink(key string, value string)
+	PutLink(key string, value string) (*storage.Entity, error)
+	ShortLink(v string) string
 }
 
 type StringGeneratorInterface interface {
@@ -58,8 +60,13 @@ func (s *ShortURL) PutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortLink := s.generator.Generate(minShortLinkLength, maxShortLinkLength)
-	s.storage.PutLink(shortLink, link)
+	var shortLink string
+	if sh := s.storage.ShortLink(link); sh != "" {
+		shortLink = sh
+	} else {
+		shortLink = s.generator.Generate(minShortLinkLength, maxShortLinkLength)
+		_, _ = s.storage.PutLink(shortLink, link)
+	}
 
 	w.WriteHeader(http.StatusCreated)
 	_, _ = w.Write([]byte(s.config.ServerURL + "/" + shortLink))
@@ -80,12 +87,12 @@ func (s *ShortURL) GetHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if link == "" {
+	if link == nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	http.Redirect(w, r, link, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, link.OriginalURL, http.StatusTemporaryRedirect)
 }
 
 func (s *ShortURL) PutJSONHandler(w http.ResponseWriter, r *http.Request) {
@@ -104,8 +111,13 @@ func (s *ShortURL) PutJSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortLink := s.generator.Generate(minShortLinkLength, maxShortLinkLength)
-	s.storage.PutLink(shortLink, reqJSON.URL)
+	var shortLink string
+	if sh := s.storage.ShortLink(reqJSON.URL); sh != "" {
+		shortLink = sh
+	} else {
+		shortLink = s.generator.Generate(minShortLinkLength, maxShortLinkLength)
+		_, _ = s.storage.PutLink(shortLink, reqJSON.URL)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

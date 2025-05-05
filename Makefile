@@ -1,4 +1,5 @@
 SERVER_PORT=12345
+TEMP_FILE=/tmp/metric_storage.txt
 
 build:
 	go build -o ./cmd/shortener/shortener ./cmd/shortener/*.go
@@ -42,7 +43,8 @@ run-test-a7:
 	shortenertestbeta -test.v -test.run=^TestIteration7$$ -binary-path=cmd/shortener/shortener -source-path=.
 run-test-a8:
 	shortenertestbeta -test.v -test.run=^TestIteration8$$ -binary-path=cmd/shortener/shortener
-
+run-test-a9:
+	shortenertestbeta -test.v -test.run=^TestIteration9$$ -binary-path=cmd/shortener/shortener -source-path=. -file-storage-path=$(TEMP_FILE)
 update-tpl:
 	# git remote add -m main template https://github.com/Yandex-Practicum/go-musthave-shortener-tpl.git
 	git fetch template && git checkout template/main .github

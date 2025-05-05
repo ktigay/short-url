@@ -45,7 +45,7 @@ func TestShortUrl_GetHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &config.Config{}
-			s := storage.NewMemStorage()
+			s := storage.NewMemStorage(nil)
 			l := zerolog.New(zerolog.TestWriter{})
 			h := NewShortURL(cfg, s, generator.NewRandStringGenerator(), &l)
 
@@ -118,7 +118,7 @@ func TestShortUrl_PutHandler(t *testing.T) {
 			cfg := &config.Config{
 				ServerURL: tt.args.serverURL,
 			}
-			s := storage.NewMemStorage()
+			s := storage.NewMemStorage(nil)
 
 			g := &MockGenerator{str: tt.args.shortURL}
 			l := zerolog.New(zerolog.TestWriter{})
@@ -200,7 +200,7 @@ func TestShortUrl_PutJSONHandler(t *testing.T) {
 			cfg := &config.Config{
 				ServerURL: tt.args.serverURL,
 			}
-			s := storage.NewMemStorage()
+			s := storage.NewMemStorage(nil)
 
 			g := &MockGenerator{str: tt.args.shortURL}
 			l := zerolog.New(zerolog.TestWriter{})
