@@ -1,0 +1,23 @@
+services:
+  container:
+    image: ${PROJECT_NAME}-app
+    container_name: ${PROJECT_NAME}-container
+    user: ${CURRENT_UID}:${CURRENT_GID}
+    working_dir: /app
+    volumes:
+      - ../:/app
+    environment:
+      - SERVER_ADDRESS=${SERVER_ADDRESS}
+      - BASE_URL=${BASE_URL}
+    ports:
+      - "${LOCAL_PORT}:${SERVER_PORT}"
+    command: /app/cmd/shortener/shortener
+    networks:
+      - shortener
+networks:
+  shortener:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 173.23.0.0/16
