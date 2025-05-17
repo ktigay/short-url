@@ -1,6 +1,12 @@
 package shorturl
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/ktigay/short-url/internal"
 	"github.com/ktigay/short-url/internal/config"
@@ -8,11 +14,6 @@ import (
 	"github.com/ktigay/short-url/internal/storage"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 func TestShortUrl_GetHandler(t *testing.T) {

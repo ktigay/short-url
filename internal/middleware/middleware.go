@@ -2,15 +2,14 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/ktigay/short-url/internal"
-	"github.com/ktigay/short-url/internal/compress"
 	"github.com/rs/zerolog"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/ktigay/short-url/internal"
+	"github.com/ktigay/short-url/internal/compress"
 	ihttp "github.com/ktigay/short-url/internal/http"
-	iio "github.com/ktigay/short-url/internal/io"
 )
 
 // WithContentType устанавливает в ResponseWriter Content-Type.
@@ -58,7 +57,7 @@ func CompressHandler(next http.Handler) http.Handler {
 
 		contentEncoding := r.Header.Get("Content-Encoding")
 		if ceAlg := compress.TypeFromString(contentEncoding); ceAlg != "" {
-			cr, err := iio.CompressReaderFactory(ceAlg, r.Body)
+			cr, err := compress.ReaderFactory(ceAlg, r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -79,7 +78,7 @@ func CompressHandler(next http.Handler) http.Handler {
 
 		if isAccepted {
 			if aeAlg := compress.TypeFromString(acceptEncoding); string(aeAlg) != "" {
-				cw := ihttp.CompressWriterFactory(aeAlg, w)
+				cw, _ := compress.NewHTTPWriter(aeAlg, w)
 				w = cw
 				defer internal.Quite(cw.Close)
 			}
