@@ -1,4 +1,4 @@
-package logger
+package log
 
 import (
 	"fmt"
@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var ZeroLogger = zerolog.New(zerolog.TestWriter{})
+var Logger = zerolog.New(zerolog.TestWriter{})
 
-func Initialize() *zerolog.Logger {
+func Initialize() {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	output.FormatLevel = func(i interface{}) string {
 		return strings.ToUpper(fmt.Sprintf("| %-6s|", i))
@@ -23,7 +23,5 @@ func Initialize() *zerolog.Logger {
 		return fmt.Sprintf("%s:", i)
 	}
 
-	ZeroLogger = zerolog.New(output).With().Timestamp().Logger()
-
-	return &ZeroLogger
+	Logger = zerolog.New(output).With().Timestamp().Logger()
 }

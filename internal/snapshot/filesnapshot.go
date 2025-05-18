@@ -2,40 +2,45 @@ package snapshot
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
-	"github.com/ktigay/short-url/internal"
+	"github.com/ktigay/short-url/internal/log"
+	"github.com/ktigay/short-url/internal/storage"
 )
 
-// FileWrite запись объекта в файл в виде json-строки.
-func FileWrite[T any](path string, e *T) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		return err
-	}
-	defer internal.Quite(file.Close)
-
-	if err := json.NewEncoder(file).Encode(e); err != nil {
-		return fmt.Errorf("failed write event: %v", err)
-	}
-	return nil
+// FileSnapshot структура для сохранения снапшота в файле.
+type FileSnapshot struct {
+	filePath string
 }
 
-// FileReadAll чтение json-строк в структуры из файла.
-func FileReadAll[T any](path string) ([]T, error) {
-	file, err := os.OpenFile(path, os.O_RDONLY|os.O_CREATE, 0644)
+// NewFileSnapshot конструктор.
+func NewFileSnapshot(filePath string) *FileSnapshot {
+	return &FileSnapshot{filePath: filePath}
+}
+
+// Read чтение снапшота из файла.
+func (f *FileSnapshot) Read() ([]storage.Entity, error) {
+	if err := ensureDir(filepath.Dir(f.filePath)); err != nil {
+		return nil, err
+	}
+
+	file, err := os.OpenFile(f.filePath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}
-	defer internal.Quite(file.Close)
-	var all = make([]T, 0)
+	defer func() {
+		if err = file.Close(); err != nil {
+			log.Logger.Error().Err(err).Str("file", f.filePath).Msg("failed to close file")
+		}
+	}()
+	var all = make([]storage.Entity, 0)
 
 	dec := json.NewDecoder(file)
 
 	for {
-		var e T
+		var e storage.Entity
 		if err = dec.Decode(&e); err != nil {
 			if err == io.EOF {
 				break
@@ -46,4 +51,39 @@ func FileReadAll[T any](path string) ([]T, error) {
 	}
 
 	return all, nil
+}
+
+// WriteAll запись данных в файл.
+func (f *FileSnapshot) Write(entities []storage.Entity) error {
+	if err := ensureDir(filepath.Dir(f.filePath)); err != nil {
+		return err
+	}
+
+	writer, err := NewAtomicFileWriter(f.filePath)
+	if err != nil {
+		return err
+	}
+
+	for _, el := range entities {
+		if err = writer.Write(el); err != nil {
+			return err
+		}
+	}
+
+	if err = writer.Flush(); err != nil {
+		return err
+	}
+	// перезапись происходит только при успешном закрытии writer.
+	return writer.Close()
+}
+
+func ensureDir(dirName string) error {
+	_, err := os.Stat(dirName)
+	if err == nil {
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+	return os.MkdirAll(dirName, os.ModeDir)
 }

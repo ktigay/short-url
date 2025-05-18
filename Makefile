@@ -57,6 +57,7 @@ run-test-a: \
 	run-test-a6 \
 	run-test-a7 \
 	run-test-a8 \
+	run-test-a9 \
 
 run-test-a1:
 	$(DOCKER_RUN) sh -c "shortenertestbeta -test.v -test.run=^TestIteration1$$ -binary-path=cmd/shortener/shortener"

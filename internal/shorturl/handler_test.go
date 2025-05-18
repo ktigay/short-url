@@ -8,11 +8,9 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/ktigay/short-url/internal"
 	"github.com/ktigay/short-url/internal/config"
 	"github.com/ktigay/short-url/internal/generator"
 	"github.com/ktigay/short-url/internal/storage"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,8 +45,7 @@ func TestShortUrl_GetHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := &config.Config{}
 			s := storage.NewMemStorage(nil)
-			l := zerolog.New(zerolog.TestWriter{})
-			h := NewShortURL(cfg, s, generator.NewRandStringGenerator(), &l)
+			h := NewShortURL(cfg, s, generator.NewRandStringGenerator())
 
 			router := mux.NewRouter()
 			router.Use(func(next http.Handler) http.Handler {
@@ -68,7 +65,7 @@ func TestShortUrl_GetHandler(t *testing.T) {
 
 			defer func() {
 				if resp != nil {
-					internal.Quite(resp.Body.Close)
+					_ = resp.Body.Close()
 				}
 			}()
 		})
@@ -122,8 +119,7 @@ func TestShortUrl_PutHandler(t *testing.T) {
 			s := storage.NewMemStorage(nil)
 
 			g := &MockGenerator{str: tt.args.shortURL}
-			l := zerolog.New(zerolog.TestWriter{})
-			h := NewShortURL(cfg, s, g, &l)
+			h := NewShortURL(cfg, s, g)
 
 			router := mux.NewRouter()
 			router.Use(func(next http.Handler) http.Handler {
@@ -147,7 +143,7 @@ func TestShortUrl_PutHandler(t *testing.T) {
 
 			defer func() {
 				if resp != nil {
-					internal.Quite(resp.Body.Close)
+					_ = resp.Body.Close()
 				}
 			}()
 		})
@@ -204,8 +200,7 @@ func TestShortUrl_PutJSONHandler(t *testing.T) {
 			s := storage.NewMemStorage(nil)
 
 			g := &MockGenerator{str: tt.args.shortURL}
-			l := zerolog.New(zerolog.TestWriter{})
-			h := NewShortURL(cfg, s, g, &l)
+			h := NewShortURL(cfg, s, g)
 
 			router := mux.NewRouter()
 			router.Use(func(next http.Handler) http.Handler {
@@ -229,7 +224,7 @@ func TestShortUrl_PutJSONHandler(t *testing.T) {
 
 			defer func() {
 				if resp != nil {
-					internal.Quite(resp.Body.Close)
+					_ = resp.Body.Close()
 				}
 			}()
 		})

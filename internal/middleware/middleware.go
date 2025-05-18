@@ -2,12 +2,11 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
+	"github.com/ktigay/short-url/internal/log"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/ktigay/short-url/internal"
 	"github.com/ktigay/short-url/internal/compress"
 	ihttp "github.com/ktigay/short-url/internal/http"
 )
@@ -21,9 +20,15 @@ func WithContentType(next http.Handler) http.Handler {
 }
 
 // WithLogging логирует запрос.
-func WithLogging(l *zerolog.Logger, next http.Handler) http.Handler {
+func WithLogging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+
+		log.Logger.Info().
+			Str("requestURI", r.RequestURI).
+			Str("method", r.Method).
+			Str("headers", fmt.Sprint(r.Header)).
+			Msg("request")
 
 		rd := &ihttp.ResponseData{
 			Status: 0,
@@ -34,16 +39,10 @@ func WithLogging(l *zerolog.Logger, next http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		l.Info().
-			Str("requestURI", r.RequestURI).
-			Str("method", r.Method).
-			Str("duration", fmt.Sprint(duration)).
-			Str("headers", fmt.Sprint(r.Header)).
-			Msg("request")
-
-		l.Info().
+		log.Logger.Info().
 			Int("status", rd.Status).
 			Int("size", rd.Size).
+			Str("duration", fmt.Sprint(duration)).
 			Str("headers", fmt.Sprint(lw.Header())).
 			Msg("response")
 	})
@@ -80,7 +79,11 @@ func CompressHandler(next http.Handler) http.Handler {
 			if aeAlg := compress.TypeFromString(acceptEncoding); string(aeAlg) != "" {
 				cw, _ := compress.NewHTTPWriter(aeAlg, w)
 				w = cw
-				defer internal.Quite(cw.Close)
+				defer func() {
+					if err := cw.Close(); err != nil {
+						log.Logger.Error().Err(err).Msg("failed to close compress writer")
+					}
+				}()
 			}
 		}
 

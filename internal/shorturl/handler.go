@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/ktigay/short-url/internal/config"
+	"github.com/ktigay/short-url/internal/log"
 	"github.com/ktigay/short-url/internal/storage"
-	"github.com/rs/zerolog"
 	"io"
 	"net/http"
 )
@@ -32,16 +32,14 @@ type ShortURL struct {
 	config    *config.Config
 	storage   StorageInterface
 	generator StringGeneratorInterface
-	logger    *zerolog.Logger
 }
 
 // NewShortURL - конструктор.
-func NewShortURL(config *config.Config, storage StorageInterface, gen StringGeneratorInterface, l *zerolog.Logger) *ShortURL {
+func NewShortURL(config *config.Config, storage StorageInterface, gen StringGeneratorInterface) *ShortURL {
 	return &ShortURL{
 		config:    config,
 		storage:   storage,
 		generator: gen,
-		logger:    l,
 	}
 }
 
@@ -126,6 +124,6 @@ func (s *ShortURL) PutJSONHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Result: s.config.ServerURL + "/" + shortLink,
 	}); err != nil {
-		s.logger.Error().Err(err).Msg("Failed to write response")
+		log.Logger.Error().Err(err).Msg("Failed to write response")
 	}
 }

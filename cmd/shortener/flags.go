@@ -11,7 +11,7 @@ const (
 	defaultServerPort      = "8080"
 	defaultServerHost      = ":" + defaultServerPort
 	defaultServerURL       = "http://localhost:" + defaultServerPort
-	defaultFileStoragePath = "./cache/storage.txt"
+	defaultFileStoragePath = "/tmp/shorten-db.json"
 	defaultRestore         = true
 )
 

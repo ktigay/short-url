@@ -1,10 +1,13 @@
 package storage
 
-import "github.com/ktigay/short-url/internal/snapshot"
+type Snapshot interface {
+	Read() ([]Entity, error)
+	Write([]Entity) error
+}
 
 type FileStorage struct {
-	mem  *MemStorage
-	path string
+	mem      *MemStorage
+	snapshot Snapshot
 }
 
 func (f *FileStorage) Link(key string) (*Entity, error) {
@@ -31,7 +34,7 @@ func (f *FileStorage) PutLink(key string, value string) (*Entity, error) {
 		return nil, err
 	}
 
-	if err = snapshot.FileWrite[Entity](f.path, om); err != nil {
+	if err = f.snapshot.Write([]Entity{*om}); err != nil {
 		_ = f.mem.Unlink(key)
 		return nil, err
 	}
@@ -43,9 +46,32 @@ func (f *FileStorage) ShortLink(v string) string {
 	return f.mem.ShortLink(v)
 }
 
-func NewFileStorage(path string, mem *MemStorage) *FileStorage {
-	return &FileStorage{
-		mem:  mem,
-		path: path,
+func (f *FileStorage) restore() error {
+	if f.mem == nil {
+		return nil
 	}
+
+	data, err := f.snapshot.Read()
+	if err != nil {
+		return err
+	}
+	for _, m := range data {
+		f.mem.links[m.ShortURL] = m
+	}
+
+	return nil
+}
+
+func NewFileStorage(snapshot Snapshot, mem *MemStorage, restore bool) (*FileStorage, error) {
+	st := FileStorage{
+		mem:      mem,
+		snapshot: snapshot,
+	}
+	if restore {
+		if err := st.restore(); err != nil {
+			return nil, err
+		}
+	}
+
+	return &st, nil
 }
