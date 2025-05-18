@@ -14,7 +14,7 @@ func TestString(t *testing.T) {
 		wantMax int
 	}{
 		{
-			name: "Positive_test",
+			name: "Positive_test_one_letter",
 			args: args{
 				min: 1,
 				max: 1,
@@ -23,7 +23,7 @@ func TestString(t *testing.T) {
 			wantMax: 1,
 		},
 		{
-			name: "Positive_test_#2",
+			name: "Positive_test_several_letters",
 			args: args{
 				min: 2,
 				max: 10,

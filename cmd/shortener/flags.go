@@ -8,9 +8,11 @@ import (
 )
 
 const (
-	defaultServerPort = "8080"
-	defaultServerHost = ":" + defaultServerPort
-	defaultServerURL  = "http://localhost:" + defaultServerPort
+	defaultServerPort      = "8080"
+	defaultServerHost      = ":" + defaultServerPort
+	defaultServerURL       = "http://localhost:" + defaultServerPort
+	defaultFileStoragePath = "/tmp/shorten-db.json"
+	defaultRestore         = true
 )
 
 func parseFlags(args []string) (*config.Config, error) {
@@ -19,6 +21,8 @@ func parseFlags(args []string) (*config.Config, error) {
 	flags := flag.NewFlagSet("server flags", flag.ContinueOnError)
 	flags.StringVar(&cfg.ServerHost, "a", defaultServerHost, "address and port to run server")
 	flags.StringVar(&cfg.ServerURL, "b", defaultServerURL, "base server URL for short link")
+	flags.StringVar(&cfg.FileStoragePath, "f", defaultFileStoragePath, "file storage path")
+	flags.BoolVar(&cfg.Restore, "r", defaultRestore, "restore data from storage")
 
 	if err := flags.Parse(args); err != nil {
 		return nil, err
