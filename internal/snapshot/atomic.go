@@ -10,7 +10,7 @@ import (
 	"github.com/ktigay/short-url/internal/log"
 )
 
-// Encoder интерфейс энкодера
+// Encoder интерфейс энкодера.
 type Encoder interface {
 	Encode(interface{}) error
 }
@@ -59,32 +59,26 @@ func (a *AtomicFileWriter) Flush() error {
 }
 
 // Close закрываем запись.
-func (a *AtomicFileWriter) Close() error {
-	err := a.tmpFile.Chmod(0644)
+func (a *AtomicFileWriter) Close() (err error) {
 	defer func() {
 		if err != nil {
 			a.onError()
 		}
 	}()
 
-	if err != nil {
+	if err = a.tmpFile.Chmod(0644); err != nil {
 		return err
 	}
 
-	err = a.tmpFile.Sync()
-	if err != nil {
+	if err = a.tmpFile.Sync(); err != nil {
 		return err
 	}
 
-	err = a.tmpFile.Close()
-	if err != nil {
+	if err = a.tmpFile.Close(); err != nil {
 		return err
 	}
 
 	err = os.Rename(a.tmpFile.Name(), a.filePath)
-	if err != nil {
-		a.onError()
-	}
 
 	return err
 }
